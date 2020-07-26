@@ -23,7 +23,7 @@ pipeline {
                     steps {
                         container('maven') {
                             script {
-                                sh "mvn package"
+                                sh "mvn -B -DskipTests clean package"
                             }
                         }
                     }
