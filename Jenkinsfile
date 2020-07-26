@@ -16,9 +16,7 @@ pipeline {
         stage('Maven build') {
             steps {
                 container('maven') {
-                    script {
-                        sh "mvn -B -DskipTests clean package"
-                    }
+                    sh "mvn -B -DskipTests clean package"
                 }
             }
         }
@@ -26,9 +24,7 @@ pipeline {
         stage('Unit tests') {
             steps {
                 container('maven') {
-                    script {
-                        sh "mvn test"
-                    }
+                    sh "mvn test"
                 }
             }
         }
@@ -36,10 +32,8 @@ pipeline {
         stage('Docker build') {
             steps {
                 container('docker') {
-                    script {
-                        sh "docker build -t ${IMAGE_NAME}:latest ."
-                        sh "docker tag ${IMAGE_NAME}:latest atamankina/${IMAGE_NAME}:latest"
-                    }
+                    sh "docker build -t ${IMAGE_NAME}:latest ."
+                    sh "docker tag ${IMAGE_NAME}:latest atamankina/${IMAGE_NAME}:latest"
                 }
             }
         }
@@ -47,10 +41,8 @@ pipeline {
         stage('Docker push') {
             steps {
                 container('docker') {
-                    script {
-                        withDockerRegistry([ credentialsId: "gal-dockerhub", url: "" ]){
-                            sh "docker push atamankina/${IMAGE_NAME}:latest"
-                        }
+                    withDockerRegistry([ credentialsId: "gal-dockerhub", url: "" ]){
+                        sh "docker push atamankina/${IMAGE_NAME}:latest"
                     }
                 }
             }
@@ -59,21 +51,21 @@ pipeline {
         stage('Create/update kubernetes deployment') {
             steps {
                 container('kubectl') {
-                        sh "kubectl apply -f k8s"
+                    sh "kubectl apply -f k8s"
                 }
             }
         }
 
         stage('Integration tests') {
             steps {
+                container('kubectl') {
+                    def service_ip = sh(
+                            script: 'kubectl get svc spring-boot-service -o jsonpath="{.status.loadBalancer.ingress[*].ip}"',
+                            returnStdout: true
+                        ).trim()
+                }
                 container('maven') {
-                    script {
-                        def service_ip = sh(
-                                            script: 'kubectl get svc spring-boot-service -o jsonpath="{.status.loadBalancer.ingress[*].ip}"',
-                                            returnStdout: true
-                                        ).trim()
-                        sh "mvn verify -Dserver.host=http://${service_ip}:8080/"
-                    }
+                    sh "mvn verify -Dserver.host=http://${service_ip}:8080/"
                 }
             }
         }
