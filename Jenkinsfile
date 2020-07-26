@@ -13,11 +13,21 @@ pipeline {
     }
 
     stages {
-        stage('Maven build/test') {
+        stage('Maven build') {
             steps {
                 container('maven') {
                     script {
-                        sh "mvn package"
+                        sh "mvn -B -DskipTests clean package"
+                    }
+                }
+            }
+        }
+
+        stage('Unit tests') {
+            steps {
+                container('maven') {
+                    script {
+                        sh "mvn test"
                     }
                 }
             }
@@ -50,6 +60,20 @@ pipeline {
             steps {
                 container('kubectl') {
                         sh "kubectl apply -f k8s"
+                }
+            }
+        }
+
+        stage('Integration tests') {
+            steps {
+                container('maven') {
+                    script {
+                        def service_ip = sh(
+                                            script: 'kubectl get svc spring-boot-service -o jsonpath="{.status.loadBalancer.ingress[*].ip}"',
+                                            returnStdout: true
+                                        ).trim()
+                        sh "mvn verify -Dserver.host=http://${service_ip}:8080/"
+                    }
                 }
             }
         }
