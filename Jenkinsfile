@@ -19,15 +19,27 @@ pipeline {
                 checkout scm
             }
         }
+        
         stage('Maven build') {
-                    steps {
-                        container('maven') {
-                            script {
-                                sh "mvn -B -DskipTests clean package"
-                            }
-                        }
+            steps {
+                container('maven') {
+                    script {
+                        sh "mvn -B -DskipTests clean package"
                     }
                 }
+            }
+        }
+
+        stage('Unit tests') {
+            steps {
+                container('maven') {
+                    script {
+                        sh "mvn test"
+                    }
+                }
+            }
+        }
+
         stage('Docker build') {
             steps {
                 container('docker') {
@@ -38,11 +50,12 @@ pipeline {
                 }
             }
         }
+
         stage('Docker push') {
             steps {
                 container('docker') {
                     script {
-                        docker.withRegistry('https://registry.hub.docker.com', 'gal-dockerhub'){
+                        withDockerRegistry([ credentialsId: "gal-dockerhub", url: "" ]){
                             sh "docker push atamankina/${IMAGE_NAME}:latest"
                         }
                     }
