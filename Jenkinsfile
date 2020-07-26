@@ -42,7 +42,9 @@ pipeline {
             steps {
                 container('docker') {
                     script {
-                        sh "docker push atamankina/${IMAGE_NAME}:latest"
+                        docker.withRegistry('https://registry.hub.docker.com', 'gal-dockerhub'){
+                            sh "docker push atamankina/${IMAGE_NAME}:latest"
+                        }
                     }
                 }
             }
