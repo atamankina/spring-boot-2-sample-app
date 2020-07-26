@@ -42,7 +42,7 @@ pipeline {
             steps {
                 container('docker') {
                     script {
-                        sh "docker push atamankina/${IMAGE_NAME}:${IMAGE_TAG}"
+                        sh "docker push atamankina/${IMAGE_NAME}:latest"
                     }
                 }
             }
