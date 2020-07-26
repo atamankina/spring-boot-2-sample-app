@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+    - name: docker
+      image: docker:latest
+      volumeMounts:
+        - mountPath: /var/run/docker.sock
+          name: docker-sock
+      tty: true
+      command:
+        - cat
+    - name: maven
+      image: maven:latest
+      tty: true
+      command:
+        - cat
+    - name: kubectl
+      image: lachlanevenson/k8s-kubectl:latest
+      tty: true
+      command:
+        - cat
+  volumes:
+    - name: docker-sock
+      hostPath:
+        path: /var/run/docker.sock
