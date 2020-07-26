@@ -17,9 +17,7 @@ pipeline {
         stage('Maven build') {
             steps {
                 container('maven') {
-                    script {
-                        sh "mvn -B -DskipTests clean package"
-                    }
+                    sh "mvn -B -DskipTests clean package"
                 }
             }
         }
@@ -27,9 +25,7 @@ pipeline {
         stage('Unit tests') {
             steps {
                 container('maven') {
-                    script {
-                        sh "mvn test"
-                    }
+                    sh "mvn test"
                 }
             }
         }
@@ -61,6 +57,7 @@ pipeline {
             steps {
                 container('kubectl') {
                     sh "kubectl apply -f k8s"
+                    sh "kubectl rollout restart spring-boot-deployment"
                 }
             }
         }
@@ -76,9 +73,7 @@ pipeline {
                     }
                 }
                 container('maven') {
-                    script {
-                        sh "mvn verify -Dserver.host=http://${SERVICE_IP}:8080/"
-                    }
+                    sh "mvn verify -Dserver.host=http://${SERVICE_IP}:8080/"
                 }
             }
         }
