@@ -33,10 +33,8 @@ pipeline {
         stage('Docker build') {
             steps {
                 container('docker') {
-                    script {
-                        sh "docker build -t ${IMAGE_NAME}:latest ."
-                        sh "docker tag ${IMAGE_NAME}:latest atamankina/${IMAGE_NAME}:latest"
-                    }
+                    sh "docker build -t ${IMAGE_NAME}:latest ."
+                    sh "docker tag ${IMAGE_NAME}:latest atamankina/${IMAGE_NAME}:latest"
                 }
             }
         }
@@ -44,10 +42,8 @@ pipeline {
         stage('Docker push') {
             steps {
                 container('docker') {
-                    script {
-                        withDockerRegistry([ credentialsId: "gal-dockerhub", url: "" ]){
-                            sh "docker push atamankina/${IMAGE_NAME}:latest"
-                        }
+                    withDockerRegistry([ credentialsId: "gal-dockerhub", url: "" ]){
+                        sh "docker push atamankina/${IMAGE_NAME}:latest"
                     }
                 }
             }
@@ -62,16 +58,32 @@ pipeline {
             }
         }
 
-        stage('Integration tests') {
+        stage('Check availability') {
             steps {
-                container('kubectl') {
-                    script {
+                sh 'sleep 90'
+                container('kubectl'){
+                    script{
                         SERVICE_IP = sh(
                             script: 'kubectl get svc spring-boot-service -o jsonpath="{.status.loadBalancer.ingress[*].ip}"',
                             returnStdout: true
                         ).trim()
                     }
                 }
+                script{
+                    waitUntil {
+                        try {
+                            sh "curl -s --head --request GET http://${SERVICE_IP}:8080/actuator/health | grep '200'"
+                            return true
+                        } catch (Exception e) {
+                            return false
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Integration tests') {
+            steps {
                 container('maven') {
                     sh "mvn verify -Dserver.host=http://${SERVICE_IP}:8080/"
                 }
