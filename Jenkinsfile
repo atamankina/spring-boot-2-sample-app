@@ -19,7 +19,7 @@ pipeline {
                 checkout scm
             }
         }
-        
+
         stage('Maven build') {
             steps {
                 container('maven') {
