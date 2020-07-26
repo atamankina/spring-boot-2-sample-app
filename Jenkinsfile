@@ -2,7 +2,6 @@ def ENV = "test"
 def UNIQUE_POD_LABEL = "jenkins-pod-${UUID.randomUUID().toString()}"
 def PROJECT_NAME = "spring-boot-app"
 def IMAGE_NAME = "${PROJECT_NAME}-${ENV}"
-def BUILD_NAME = "Build-#${BUILD_NUMBER}-${ENV}"
 
 pipeline {
     agent {
@@ -14,27 +13,11 @@ pipeline {
     }
 
     stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-
-        stage('Maven build') {
+        stage('Maven build/test') {
             steps {
                 container('maven') {
                     script {
-                        sh "mvn -B -DskipTests clean package"
-                    }
-                }
-            }
-        }
-
-        stage('Unit tests') {
-            steps {
-                container('maven') {
-                    script {
-                        sh "mvn test"
+                        sh "mvn package"
                     }
                 }
             }
@@ -66,7 +49,7 @@ pipeline {
         stage('Create/update kubernetes deployment') {
             steps {
                 container('kubectl') {
-                        sh "kubectl get ns"
+                        sh "kubectl apply -f k8s"
                 }
             }
         }
