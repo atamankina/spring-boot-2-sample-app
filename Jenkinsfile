@@ -19,6 +19,15 @@ pipeline {
                 checkout scm
             }
         }
+        stage('Maven build') {
+                    steps {
+                        container('maven') {
+                            script {
+                                sh "mvn package"
+                            }
+                        }
+                    }
+                }
         stage('Docker build') {
             steps {
                 container('docker') {
