@@ -57,7 +57,7 @@ pipeline {
             steps {
                 container('kubectl') {
                     sh "kubectl apply -f k8s"
-                    sh "kubectl rollout restart spring-boot-deployment"
+                    sh "kubectl rollout restart deployment spring-boot-deployment"
                 }
             }
         }
